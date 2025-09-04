@@ -5,201 +5,103 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>SmartXpress — Demo</title>
 
-  <!-- Tailwind Play CDN for quick styling -->
+  <!-- TailwindCSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <style>
-    html,body,#root { height: 100%; }
-    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
-  </style>
-</head>
-<body class="bg-gray-50">
-  <div id="root"></div>
-
-  <!-- React (UMD) -->
+  <!-- React (UMD) + Babel -->
   <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-  <!-- Babel for JSX in browser -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+  <style>
+    html,body,#root { height: 100%; margin: 0; }
+    body { font-family: Inter, sans-serif; background: #f9fafb; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
   <script type="text/babel">
-  const { useState, useEffect } = React;
+    const { useState } = React;
 
-  /******* Mock Vehicle Diagnostics Data *******/
-  const VEHICLES = [
-    { id: 1, car: "Toyota Corolla", issue: "Engine Misfire", location: "Lagos", estCost: "$40", desc: "Cylinder misfire detected — repair advised." },
-    { id: 2, car: "Honda Civic", issue: "Brake Fluid Low", location: "Abuja", estCost: "$25", desc: "Brake fluid below safe level — refill needed." },
-    { id: 3, car: "Nissan Altima", issue: "Battery Weak", location: "Kano", estCost: "$50", desc: "Battery voltage low — replacement recommended." }
-  ];
-
-  /******* Header Component *******/
-  function Header() {
-    return (
-      <header className="bg-white shadow-sm p-4 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">S</div>
-          <div>
-            <h1 className="text-lg font-bold">SmartXpress</h1>
-            <p className="text-xs text-gray-500">Detect Car Faults in Seconds 🚗⚡</p>
-          </div>
-        </div>
-      </header>
-    );
-  }
-
-  /******* Landing Page *******/
-  function Landing({ onStart }) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-blue-700 to-blue-500 text-white p-6">
-        <h2 className="text-4xl font-extrabold mb-3">🚀 SmartXpress Device</h2>
-        <p className="max-w-xl text-center mb-6">
-          Africa’s first AI-powered portable tool that detects car faults in under 60 seconds.  
-          Save time, money, and trust in workshops.
-        </p>
-        <button onClick={onStart} className="px-6 py-3 bg-white text-blue-700 rounded-lg font-semibold shadow">
-          Try Demo
-        </button>
-        <p className="text-xs opacity-90 mt-6">Hackathon demo — all interactions simulated.</p>
-      </div>
-    );
-  }
-
-  /******* Vehicle Card *******/
-  function VehicleCard({ vehicle, onMatch }) {
-    return (
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
-        <h3 className="font-bold text-lg">{vehicle.car}</h3>
-        <p className="text-sm text-gray-600 mt-1">{vehicle.desc}</p>
-        <div className="mt-3 text-sm text-gray-700">
-          <div><strong>Issue:</strong> {vehicle.issue}</div>
-          <div><strong>Location:</strong> {vehicle.location}</div>
-          <div><strong>Est. Repair Cost:</strong> {vehicle.estCost}</div>
-        </div>
-        <button onClick={() => onMatch(vehicle)} className="mt-4 px-3 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700">
-          Find Mechanic
-        </button>
-      </div>
-    );
-  }
-
-  /******* IoT Fault Alert Toast *******/
-  function AlertToast({ message, onClose }) {
-    useEffect(() => {
-      const t = setTimeout(onClose, 8000);
-      return () => clearTimeout(t);
-    }, []);
-    return (
-      <div className="fixed right-4 bottom-4 max-w-xs bg-yellow-50 border border-yellow-400 text-yellow-900 p-4 rounded shadow-lg">
-        <div className="flex justify-between items-start">
-          <div>
-            <strong className="block">⚠️ Device Alert</strong>
-            <p className="text-sm mt-1">{message}</p>
-          </div>
-          <button onClick={onClose} className="ml-4 text-sm px-2 py-1 bg-yellow-600 text-white rounded">Close</button>
-        </div>
-      </div>
-    );
-  }
-
-  /******* Modal *******/
-  function Modal({ open, title, children, onClose }) {
-    if (!open) return null;
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
-        <div className="bg-white rounded-lg shadow-lg max-w-lg w-full overflow-hidden">
-          <div className="p-4 border-b flex justify-between items-center">
-            <h4 className="font-semibold">{title}</h4>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">✕</button>
-          </div>
-          <div className="p-4">{children}</div>
-        </div>
-      </div>
-    );
-  }
-
-  /******* Dashboard *******/
-  function Dashboard() {
-    const [vehicles] = useState(VEHICLES);
-    const [alertShown, setAlertShown] = useState(false);
-    const [modal, setModal] = useState({ open: false, vehicle: null, mechanic: null, status: null });
-
-    function onMatch(vehicle) {
-      const mechanics = [
-        { id: "m1", name: "AutoFix Workshop (Lagos)", distance: "5 km", contact: "autofix@example.org" },
-        { id: "m2", name: "Speedy Repairs (Abuja)", distance: "8 km", contact: "speedy@example.org" }
-      ];
-      setModal({ open: true, vehicle, mechanic: mechanics[0], status: null });
+    function Header() {
+      return (
+        <header className="bg-white shadow p-4 text-center">
+          <h1 className="text-2xl font-bold text-green-700">🚗 SmartXpress</h1>
+          <p className="text-gray-600 text-sm">AI-powered fault detection for African vehicles</p>
+        </header>
+      );
     }
 
-    function confirmMatch() {
-      setModal(m => ({ ...m, status: 'success' }));
-      setTimeout(() => setModal({ open: false, vehicle: null, mechanic: null, status: null }), 2000);
+    function Modal({ open, onClose, title, children }) {
+      if (!open) return null;
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="font-semibold text-lg">{title}</h3>
+              <button onClick={onClose} className="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+            <div className="p-4">{children}</div>
+          </div>
+        </div>
+      );
     }
 
-    return (
-      <div className="min-h-screen">
-        <Header />
-        <main className="p-6">
-          <section className="max-w-6xl mx-auto">
-            <h2 className="text-2xl font-bold mb-4">Vehicle Diagnostics</h2>
-            <div className="grid gap-4 md:grid-cols-3 mb-6">
-              {vehicles.map(v => <VehicleCard key={v.id} vehicle={v} onMatch={onMatch} />)}
-            </div>
+    function Demo() {
+      const [fault, setFault] = useState(null);
+      const [modalOpen, setModalOpen] = useState(false);
 
-            <button onClick={() => setAlertShown(true)} className="px-4 py-2 bg-red-600 text-white rounded shadow">
-              Simulate Device Fault Alert
-            </button>
+      function runDiagnosis() {
+        const faults = ["Battery issue", "Alternator fault", "Engine misfire", "Brake sensor error"];
+        setFault(faults[Math.floor(Math.random() * faults.length)]);
+        setModalOpen(true);
+      }
 
-            <div className="mt-10 p-4 bg-white rounded-lg shadow-sm">
-              <h3 className="font-semibold mb-2">How this demo maps to the hackathon:</h3>
-              <ul className="text-sm text-gray-700 list-disc pl-5">
-                <li>Vehicle → Mechanic matching (simulated)</li>
-                <li>IoT Fault Alerts (simulated)</li>
-                <li>Mobile-first UI; ready for African workshops</li>
-              </ul>
-            </div>
-          </section>
+      return (
+        <main className="p-6 max-w-lg mx-auto">
+          <h2 className="text-xl font-semibold mb-4">🔍 Vehicle Diagnostic Demo</h2>
+          <button
+            onClick={runDiagnosis}
+            className="px-6 py-3 bg-green-600 text-white rounded shadow hover:bg-green-700"
+          >
+            Run Smart Diagnosis
+          </button>
+
+          <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Diagnosis Result">
+            {fault ? (
+              <div>
+                <p className="font-bold text-red-600">⚠️ Fault Detected:</p>
+                <p className="mt-2">{fault}</p>
+                <p className="mt-4 text-sm text-gray-600">
+                  Recommendation: Visit a SmartXpress-certified mechanic for immediate action.
+                </p>
+                <button
+                  onClick={() => setModalOpen(false)}
+                  className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
+              <p>No fault detected.</p>
+            )}
+          </Modal>
         </main>
+      );
+    }
 
-        {/* Modal */}
-        <Modal open={modal.open} title={modal.vehicle ? `Find Mechanic: ${modal.vehicle.car}` : 'Find Mechanic'} onClose={() => setModal({ open: false, vehicle: null, mechanic: null, status: null })}>
-          {modal.status === 'success' ? (
-            <div className="text-center py-6">
-              <div className="text-green-600 text-3xl mb-2">✔️</div>
-              <p className="font-semibold">Mechanic matched successfully!</p>
-              <p className="text-sm text-gray-600 mt-2">Details sent. Repairs handled via SmartXpress platform.</p>
-            </div>
-          ) : (
-            <>
-              <p className="text-sm text-gray-700 mb-4">We found a nearby mechanic. Confirm to connect.</p>
-              <div className="border rounded p-3 bg-gray-50 mb-4">
-                <div className="font-semibold">{modal.mechanic?.name}</div>
-                <div className="text-xs text-gray-600">{modal.mechanic?.distance} • {modal.mechanic?.contact}</div>
-              </div>
-              <div className="flex justify-end space-x-3">
-                <button onClick={() => setModal({ open: false, vehicle: null, mechanic: null, status: null })} className="px-3 py-2 border rounded">Cancel</button>
-                <button onClick={confirmMatch} className="px-4 py-2 bg-blue-600 text-white rounded">Confirm</button>
-              </div>
-            </>
-          )}
-        </Modal>
+    function App() {
+      return (
+        <div>
+          <Header />
+          <Demo />
+        </div>
+      );
+    }
 
-        {/* IoT Alert toast */}
-        {alertShown && <AlertToast message="⚠️ Toyota Corolla in Lagos shows overheating risk! Immediate action required." onClose={() => setAlertShown(false)} />}
-
-        <footer className="p-4 text-center text-xs text-gray-500">
-          SmartXpress — Hackathon Demo • Made in Africa • Vehicle Diagnostic Innovation
-        </footer>
-      </div>
-    );
-  }
-
-  function App() {
-    const [started, setStarted] = useState(false);
-    return started ? <Dashboard /> : <Landing onStart={() => setStarted(true)} />;
-  }
-
-  ReactDOM.render(<App />, document.getElementById('root'));
+    ReactDOM.render(<App />, document.getElementById("root"));
   </script>
 </body>
 </html>
+
